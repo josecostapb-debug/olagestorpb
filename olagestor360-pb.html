@@ -1,0 +1,1779 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OLAGESTOR360-PB - Ouvidoria Digital e Gestão Estratégica</title>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #2A2D5A;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .main-container {
+            max-width: 600px;
+            width: 100%;
+            background: white;
+            border-radius: 30px;
+            padding: 40px 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        /* Logo e Header */
+        .logo-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo-circle {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #5B5FED, #7C7FFF);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .logo-circle span {
+            color: white;
+            font-size: 32px;
+            font-weight: 800;
+        }
+
+        .title {
+            font-size: 32px;
+            font-weight: 800;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 11px;
+            color: #666;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        /* Busca */
+        .search-container {
+            margin: 30px 0;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #E8E8E8;
+            border-radius: 12px;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.3s;
+            background: #F8F8F8;
+            color: #999;
+        }
+
+        .search-input:focus {
+            border-color: #5B5FED;
+            background: white;
+            color: #1a1a1a;
+        }
+
+        /* Lista de Municípios */
+        .municipalities-list {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .municipalities-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .municipalities-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .municipalities-list::-webkit-scrollbar-thumb {
+            background: #5B5FED;
+            border-radius: 10px;
+        }
+
+        .municipality-item {
+            background: white;
+            border: 1px solid #E8E8E8;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .municipality-item:hover {
+            box-shadow: 0 4px 12px rgba(91, 95, 237, 0.15);
+            border-color: #5B5FED;
+        }
+
+        .municipality-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .municipality-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+
+        .municipality-tag {
+            font-size: 11px;
+            color: #5B5FED;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .municipality-buttons {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 14px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-avaliar {
+            background: linear-gradient(135deg, #5B5FED, #7C7FFF);
+            color: white;
+        }
+
+        .btn-avaliar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(91, 95, 237, 0.3);
+        }
+
+        .btn-gabinete {
+            background: #2A2D5A;
+            color: white;
+        }
+
+        .btn-gabinete:hover {
+            background: #1a1d3a;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(42, 45, 90, 0.3);
+        }
+
+        /* Secretarias Grid */
+        .secretarias-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .secretaria-btn {
+            padding: 14px 10px;
+            border: 2px solid #E8E8E8;
+            border-radius: 12px;
+            background: #F8F8F8;
+            color: #444;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            line-height: 1.3;
+        }
+
+        .secretaria-btn:hover {
+            border-color: #5B5FED;
+            background: #f0f0ff;
+            color: #5B5FED;
+        }
+
+        .secretaria-btn.active {
+            background: linear-gradient(135deg, #5B5FED, #7C7FFF);
+            color: white;
+            border-color: #5B5FED;
+            box-shadow: 0 4px 12px rgba(91, 95, 237, 0.3);
+        }
+
+        .secretaria-selected-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #5B5FED, #7C7FFF);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-top: 12px;
+            text-transform: uppercase;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(42, 45, 90, 0.85);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 30px;
+            max-width: 550px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #5B5FED, #7C7FFF);
+            padding: 30px;
+            border-radius: 30px 30px 0 0;
+            position: relative;
+            color: white;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 32px;
+            height: 32px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            color: white;
+            font-size: 20px;
+        }
+
+        .modal-close:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .modal-title {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            opacity: 0.95;
+        }
+
+        .modal-municipality {
+            font-size: 28px;
+            font-weight: 800;
+        }
+
+        .modal-body {
+            padding: 35px 30px;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+        }
+
+        .form-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 5px;
+        }
+
+        .form-subtitle {
+            font-size: 11px;
+            color: #999;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 16px 18px;
+            border: 2px solid #E8E8E8;
+            border-radius: 12px;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.3s;
+            background: #F8F8F8;
+            margin-bottom: 12px;
+            font-family: inherit;
+        }
+
+        .form-input:focus {
+            border-color: #5B5FED;
+            background: white;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .toggle-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .toggle-btn {
+            padding: 14px;
+            border: 2px solid #E8E8E8;
+            border-radius: 12px;
+            background: #F8F8F8;
+            color: #999;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .toggle-btn.active {
+            background: linear-gradient(135deg, #5B5FED, #7C7FFF);
+            color: white;
+            border-color: #5B5FED;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #5B5FED, #7C7FFF);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(91, 95, 237, 0.25);
+        }
+
+        /* Dashboard Gabinete */
+        .dashboard {
+            padding: 30px;
+        }
+
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .dashboard-title {
+            font-size: 28px;
+            font-weight: 800;
+            color: #1a1a1a;
+            margin-bottom: 10px;
+        }
+
+        .dashboard-subtitle {
+            font-size: 16px;
+            color: #5B5FED;
+            font-weight: 600;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #5B5FED, #7C7FFF);
+            color: white;
+            padding: 25px 20px;
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            font-weight: 600;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .feedback-section {
+            margin-top: 30px;
+        }
+
+        .feedback-filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            border: 2px solid #E8E8E8;
+            border-radius: 10px;
+            background: white;
+            color: #666;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-btn.active {
+            background: #5B5FED;
+            color: white;
+            border-color: #5B5FED;
+        }
+
+        .feedback-item {
+            background: #F8F8F8;
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 15px;
+            border-left: 4px solid #5B5FED;
+        }
+
+        .feedback-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+
+        .feedback-type-badge {
+            background: #5B5FED;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .feedback-type-badge.elogio {
+            background: #22c55e;
+        }
+
+        .feedback-type-badge.reclamacao {
+            background: #ef4444;
+        }
+
+        .feedback-type-badge.sugestao {
+            background: #f59e0b;
+        }
+
+        .feedback-type-badge.solicitacao {
+            background: #5B5FED;
+        }
+
+        .secretaria-badge {
+            background: #E8E8FF;
+            color: #5B5FED;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-left: 6px;
+        }
+
+        .feedback-date {
+            color: #999;
+            font-weight: 600;
+        }
+
+        .feedback-content {
+            color: #333;
+            line-height: 1.6;
+            margin-top: 10px;
+        }
+
+        .feedback-user {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #E8E8E8;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .back-btn {
+            padding: 12px 30px;
+            background: #E8E8E8;
+            color: #666;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: #d8d8d8;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .password-section {
+            margin: 20px 0;
+        }
+
+        /* Termômetro de Avaliação */
+        .rating-card {
+            background: linear-gradient(135deg, #F8F8F8, #FFFFFF);
+            border: 2px solid #E8E8E8;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .speedometer-container {
+            position: relative;
+            width: 280px;
+            height: 180px;
+            margin: 30px auto 20px;
+        }
+
+        .speedometer {
+            position: relative;
+            width: 280px;
+            height: 140px;
+        }
+
+        .speedometer-arc {
+            width: 280px;
+            height: 140px;
+            border-radius: 280px 280px 0 0;
+            background: conic-gradient(
+                from 180deg at 50% 100%,
+                #FF4444 0deg,
+                #FF8844 36deg,
+                #FFBB44 72deg,
+                #FFEE44 108deg,
+                #BBFF44 144deg,
+                #44FF44 180deg
+            );
+            position: relative;
+            overflow: hidden;
+        }
+
+        .speedometer-inner {
+            position: absolute;
+            width: 220px;
+            height: 110px;
+            background: white;
+            border-radius: 220px 220px 0 0;
+            bottom: 0;
+            left: 30px;
+        }
+
+        .speedometer-needle {
+            position: absolute;
+            width: 4px;
+            height: 100px;
+            background: linear-gradient(to top, #2A2D5A, #5B5FED);
+            bottom: 0;
+            left: 138px;
+            transform-origin: bottom center;
+            transform: rotate(-90deg);
+            transition: transform 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
+            border-radius: 4px 4px 0 0;
+            box-shadow: 0 0 10px rgba(91, 95, 237, 0.5);
+        }
+
+        .speedometer-center {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, #5B5FED, #7C7FFF);
+            border-radius: 50%;
+            bottom: -10px;
+            left: 130px;
+            box-shadow: 0 2px 8px rgba(91, 95, 237, 0.4);
+            z-index: 10;
+        }
+
+        .speedometer-value {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 42px;
+            font-weight: 800;
+            color: #5B5FED;
+            text-shadow: 0 2px 4px rgba(91, 95, 237, 0.2);
+        }
+
+        .speedometer-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            padding: 0 20px;
+        }
+
+        .speedometer-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #666;
+        }
+
+        .rating-buttons {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 8px;
+            margin-top: 25px;
+        }
+
+        .rating-btn {
+            aspect-ratio: 1;
+            border: 2px solid #E8E8E8;
+            border-radius: 10px;
+            background: #F8F8F8;
+            color: #999;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .rating-btn:hover {
+            border-color: #5B5FED;
+            background: #FFFFFF;
+            transform: scale(1.1);
+        }
+
+        .rating-btn.active {
+            background: linear-gradient(135deg, #5B5FED, #7C7FFF);
+            color: white;
+            border-color: #5B5FED;
+            transform: scale(1.15);
+            box-shadow: 0 4px 12px rgba(91, 95, 237, 0.3);
+        }
+
+        /* Botão WhatsApp */
+        .whatsapp-btn {
+            background: #25D366;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 13px;
+            margin-top: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .whatsapp-btn:hover {
+            background: #20BA5A;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+        }
+
+        /* Performance por Secretaria */
+        .secretaria-performance-card {
+            background: #F8F8F8;
+            border: 2px solid #E8E8E8;
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        .secretaria-performance-card:hover {
+            border-color: #5B5FED;
+            box-shadow: 0 4px 12px rgba(91, 95, 237, 0.15);
+        }
+
+        .secretaria-performance-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .secretaria-performance-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a1a1a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .secretaria-performance-badge {
+            background: linear-gradient(135deg, #5B5FED, #7C7FFF);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .secretaria-performance-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .secretaria-performance-stat {
+            text-align: center;
+            padding: 10px;
+            background: white;
+            border-radius: 10px;
+        }
+
+        .secretaria-performance-stat-value {
+            font-size: 18px;
+            font-weight: 800;
+            color: #5B5FED;
+        }
+
+        .secretaria-performance-stat-label {
+            font-size: 10px;
+            color: #999;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        .secretaria-performance-bar {
+            width: 100%;
+            height: 8px;
+            background: #E8E8E8;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 12px;
+        }
+
+        .secretaria-performance-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #5B5FED, #7C7FFF);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        @media (max-width: 600px) {
+            .rating-buttons {
+                grid-template-columns: repeat(5, 1fr);
+                gap: 6px;
+            }
+
+            .speedometer-container {
+                width: 240px;
+                height: 160px;
+            }
+
+            .speedometer {
+                width: 240px;
+                height: 120px;
+            }
+
+            .speedometer-arc {
+                width: 240px;
+                height: 120px;
+            }
+
+            .speedometer-inner {
+                width: 180px;
+                height: 90px;
+                left: 30px;
+            }
+
+            .speedometer-needle {
+                height: 80px;
+                left: 118px;
+            }
+
+            .speedometer-center {
+                left: 110px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container" id="mainContainer">
+        <!-- Tela Principal -->
+        <div id="homeScreen">
+            <div class="logo-section">
+                <div class="logo-circle">
+                    <span>360</span>
+                </div>
+                <div class="title">OLAGESTOR360-PB</div>
+                <div class="subtitle">Ouvidoria Digital e Gestão Estratégica</div>
+            </div>
+
+            <div class="search-container">
+                <input type="text" class="search-input" id="searchInput" placeholder="Buscar seu Município..." onkeyup="filterMunicipalities()">
+            </div>
+
+            <!-- Card Governo Estadual -->
+            <div class="state-card" style="background: linear-gradient(135deg, #2A2D5A, #5B5FED); padding: 25px; border-radius: 20px; margin-bottom: 25px; box-shadow: 0 8px 24px rgba(91, 95, 237, 0.25);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div>
+                        <div style="font-size: 24px; font-weight: 800; color: white; margin-bottom: 5px;">GOVERNO ESTADUAL</div>
+                        <div style="font-size: 12px; color: rgba(255,255,255,0.8); font-weight: 600; letter-spacing: 1px;">PARAÍBA</div>
+                    </div>
+                    <div style="width: 60px; height: 60px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 800; color: white;">PB</div>
+                </div>
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px;">
+                    <button class="btn btn-avaliar" onclick="openCitizenModal('GOVERNO ESTADUAL DA PARAÍBA')" style="background: white; color: #5B5FED;">Avaliar Estado</button>
+                    <button class="btn btn-gabinete" onclick="openGabineteModal('GOVERNO ESTADUAL DA PARAÍBA')" style="background: rgba(255,255,255,0.15); color: white; border: 2px solid white;">Gabinete</button>
+                </div>
+            </div>
+
+            <div class="municipalities-list" id="municipalitiesList">
+                <!-- Municípios serão inseridos aqui -->
+            </div>
+        </div>
+
+        <!-- Dashboard Gabinete -->
+        <div id="gabineteDashboard" class="hidden">
+            <button class="back-btn" onclick="backToHome()">← Voltar</button>
+
+            <div class="dashboard-header">
+                <div class="dashboard-title">GABINETE</div>
+                <div class="dashboard-subtitle" id="dashboardMunicipality"></div>
+            </div>
+
+            <!-- Card Principal com Velocímetro Grande -->
+            <div class="rating-card" style="margin-bottom: 25px;">
+                <div class="form-title" style="font-size: 24px;">Avaliação Geral da Gestão</div>
+                <div class="form-subtitle">Média de todas as avaliações recebidas</div>
+
+                <!-- Velocímetro Grande -->
+                <div class="speedometer-container" style="width: 320px; height: 200px; margin: 35px auto 25px;">
+                    <div class="speedometer" style="width: 320px; height: 160px;">
+                        <div class="speedometer-arc" style="width: 320px; height: 160px; border-radius: 320px 320px 0 0;"></div>
+                        <div class="speedometer-inner" style="width: 250px; height: 125px; left: 35px; border-radius: 250px 250px 0 0;"></div>
+                        <div class="speedometer-needle" id="dashboardNeedle" style="height: 115px; left: 158px;"></div>
+                        <div class="speedometer-center" style="left: 150px;"></div>
+                        <div class="speedometer-value" id="dashboardValue" style="font-size: 56px; bottom: 25px;">0.0</div>
+                    </div>
+                    <div class="speedometer-labels">
+                        <span class="speedometer-label">1</span>
+                        <span class="speedometer-label">5</span>
+                        <span class="speedometer-label">10</span>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 20px;">
+                    <span style="font-size: 16px; color: #666; font-weight: 600;">
+                        <span id="dashboardMediaText">Aguardando avaliações</span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalAvaliacoes">0</div>
+                    <div class="stat-label">Avaliações</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #ef4444, #f87171);">
+                    <div class="stat-value" id="totalReclamacoes">0</div>
+                    <div class="stat-label">Reclamações</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #f59e0b, #fbbf24);">
+                    <div class="stat-value" id="totalSugestoes">0</div>
+                    <div class="stat-label">Sugestões</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #5B5FED, #7C7FFF);">
+                    <div class="stat-value" id="totalSolicitacoes">0</div>
+                    <div class="stat-label">Solicitações</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #22c55e, #4ade80);">
+                    <div class="stat-value" id="totalElogios">0</div>
+                    <div class="stat-label">Elogios</div>
+                </div>
+            </div>
+
+            <!-- Dashboard de Performance por Secretaria -->
+            <div class="form-section" style="margin-top: 40px;">
+                <div class="form-title" style="font-size: 22px; margin-bottom: 5px;">📊 Performance por Secretaria</div>
+                <div class="form-subtitle" style="margin-bottom: 25px;">Avaliação média de cada área da gestão</div>
+
+                <div id="secretariasPerformance" style="display: grid; gap: 15px;">
+                    <!-- Cards de secretarias serão inseridos aqui -->
+                </div>
+            </div>
+
+            <div class="feedback-section">
+                <div class="feedback-filters">
+                    <button class="filter-btn active" onclick="filterDashboardFeedback('all')">Todos</button>
+                    <button class="filter-btn" onclick="filterDashboardFeedback('reclamacao')">Reclamações</button>
+                    <button class="filter-btn" onclick="filterDashboardFeedback('sugestao')">Sugestões</button>
+                    <button class="filter-btn" onclick="filterDashboardFeedback('solicitacao')">Solicitações</button>
+                    <button class="filter-btn" onclick="filterDashboardFeedback('elogio')">Elogios</button>
+                </div>
+
+                <div id="feedbackList">
+                    <!-- Feedbacks serão inseridos aqui -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Identificação do Cidadão -->
+    <div class="modal" id="citizenModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="modal-close" onclick="closeModal('citizenModal')">✕</button>
+                <div class="modal-title">PROTOCOLO OLAGESTOR360-PB</div>
+                <div class="modal-municipality" id="citizenModalMunicipality"></div>
+            </div>
+
+            <div class="modal-body">
+                <div class="form-section">
+                    <div class="form-title">Identificação Obrigatória</div>
+                    <div class="form-subtitle">Segurança e Validação</div>
+
+                    <input type="text" class="form-input" id="inputNome" placeholder="Nome Completo">
+
+                    <div class="form-row">
+                        <input type="text" class="form-input" id="inputCPF" placeholder="CPF ou Título de Eleitor">
+                        <input type="text" class="form-input" id="inputWhatsApp" placeholder="WhatsApp (DDD+Número)">
+                    </div>
+
+                    <input type="text" class="form-input" id="inputBairro" placeholder="Seu Bairro">
+
+                    <div class="toggle-container">
+                        <button class="toggle-btn active" id="toggleUrbana" onclick="setLocationType('urbana')">URBANA</button>
+                        <button class="toggle-btn" id="toggleRural" onclick="setLocationType('rural')">RURAL</button>
+                    </div>
+
+                    <button class="btn-submit" id="btnIniciarAvaliacao" onclick="startEvaluation()">Iniciar Avaliação</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Escolha de Secretaria -->
+    <div class="modal" id="secretariaModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="modal-close" onclick="closeModal('secretariaModal')">✕</button>
+                <div class="modal-title">SELECIONE A ÁREA</div>
+                <div class="modal-municipality" id="secretariaModalMunicipality"></div>
+            </div>
+
+            <div class="modal-body">
+                <div class="form-section">
+                    <div class="form-title">Qual secretaria você quer avaliar?</div>
+                    <div class="form-subtitle">Escolha a área que melhor se encaixa no seu comentário</div>
+
+                    <div class="secretarias-grid">
+                        <button class="secretaria-btn" onclick="selectSecretaria('Saúde')">🏥 Saúde</button>
+                        <button class="secretaria-btn" onclick="selectSecretaria('Educação')">📚 Educação</button>
+                        <button class="secretaria-btn" onclick="selectSecretaria('Infraestrutura')">🏗️ Infraestrutura</button>
+                        <button class="secretaria-btn" onclick="selectSecretaria('Assistência Social')">🤝 Assistência Social</button>
+                        <button class="secretaria-btn" onclick="selectSecretaria('Segurança Pública')">🛡️ Segurança Pública</button>
+                        <button class="secretaria-btn" onclick="selectSecretaria('Meio Ambiente')">🌿 Meio Ambiente</button>
+                        <button class="secretaria-btn" onclick="selectSecretaria('Transporte')">🚌 Transporte</button>
+                        <button class="secretaria-btn" onclick="selectSecretaria('Finanças')">💰 Finanças</button>
+                        <button class="secretaria-btn" onclick="selectSecretaria('Agricultura')">🌾 Agricultura</button>
+                        <button class="secretaria-btn" onclick="selectSecretaria('Cultura e Turismo')">🎭 Cultura e Turismo</button>
+                        <button class="secretaria-btn" onclick="selectSecretaria('Esporte e Lazer')">⚽ Esporte e Lazer</button>
+                        <button class="secretaria-btn" onclick="selectSecretaria('Administração Geral')">🏛️ Administração Geral</button>
+                    </div>
+
+                    <div id="secretariaSelectedInfo" style="display:none; text-align:center; margin-top:15px;">
+                        <div style="font-size:13px; color:#666; margin-bottom:6px;">Área selecionada:</div>
+                        <span class="secretaria-selected-badge" id="secretariaSelectedBadge"></span>
+                    </div>
+
+                    <button class="btn-submit" style="margin-top:20px;" onclick="confirmSecretaria()">Continuar para Avaliação →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Avaliação -->
+    <div class="modal" id="evaluationModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="modal-close" onclick="closeModal('evaluationModal')">✕</button>
+                <div class="modal-title">SUA AVALIAÇÃO</div>
+                <div class="modal-municipality" id="evaluationModalMunicipality"></div>
+            </div>
+
+            <div class="modal-body">
+                <!-- Card de Avaliação com Termômetro -->
+                <div class="rating-card">
+                    <div class="form-title">Como você avalia a gestão?</div>
+                    <div class="form-subtitle">Selecione uma nota de 1 a 10</div>
+
+                    <!-- Velocímetro -->
+                    <div class="speedometer-container">
+                        <div class="speedometer">
+                            <div class="speedometer-arc"></div>
+                            <div class="speedometer-inner"></div>
+                            <div class="speedometer-needle" id="speedometerNeedle"></div>
+                            <div class="speedometer-center"></div>
+                            <div class="speedometer-value" id="speedometerValue">0</div>
+                        </div>
+                        <div class="speedometer-labels">
+                            <span class="speedometer-label">1</span>
+                            <span class="speedometer-label">5</span>
+                            <span class="speedometer-label">10</span>
+                        </div>
+                    </div>
+
+                    <!-- Botões de 1 a 10 -->
+                    <div class="rating-buttons">
+                        <button class="rating-btn" onclick="setRating(1)">1</button>
+                        <button class="rating-btn" onclick="setRating(2)">2</button>
+                        <button class="rating-btn" onclick="setRating(3)">3</button>
+                        <button class="rating-btn" onclick="setRating(4)">4</button>
+                        <button class="rating-btn" onclick="setRating(5)">5</button>
+                        <button class="rating-btn" onclick="setRating(6)">6</button>
+                        <button class="rating-btn" onclick="setRating(7)">7</button>
+                        <button class="rating-btn" onclick="setRating(8)">8</button>
+                        <button class="rating-btn" onclick="setRating(9)">9</button>
+                        <button class="rating-btn" onclick="setRating(10)">10</button>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="form-title">Tipo de Feedback</div>
+                    <div style="text-align:center; margin-bottom:10px;">
+                        <span style="font-size:12px; color:#666;">Área: </span>
+                        <span class="secretaria-selected-badge" id="secretariaOnEvaluation" style="font-size:11px; padding: 3px 10px;"></span>
+                    </div>
+                    <div class="toggle-container" style="grid-template-columns: repeat(2, 1fr);">
+                        <button class="toggle-btn" id="btnReclamacao" onclick="setFeedbackType('reclamacao')">Reclamação</button>
+                        <button class="toggle-btn" id="btnSugestao" onclick="setFeedbackType('sugestao')">Sugestão</button>
+                        <button class="toggle-btn" id="btnSolicitacao" onclick="setFeedbackType('solicitacao')">Solicitação</button>
+                        <button class="toggle-btn" id="btnElogio" onclick="setFeedbackType('elogio')">Elogio</button>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="form-title">Seu Comentário</div>
+                    <textarea class="form-input" id="inputComentario" rows="5" placeholder="Escreva aqui sua mensagem..."></textarea>
+                </div>
+
+                <button class="btn-submit" onclick="submitEvaluation()">Enviar Avaliação</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Login Gabinete -->
+    <div class="modal" id="gabineteModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="modal-close" onclick="closeModal('gabineteModal')">✕</button>
+                <div class="modal-title">ACESSO RESTRITO</div>
+                <div class="modal-municipality">GABINETE</div>
+            </div>
+
+            <div class="modal-body">
+                <div class="form-section">
+                    <div class="form-title">Login do Prefeito</div>
+                    <div class="form-subtitle">Digite a senha de acesso</div>
+
+                    <input type="password" class="form-input" id="inputSenhaGabinete" placeholder="Senha">
+
+                    <button class="btn-submit" onclick="loginGabinete()">Entrar no Gabinete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuração Firebase (Projeto Real)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCqrz_TkRZGx9KbYJ7dXm8YqJZ0FGKj-hM",
+            authDomain: "olagestor360-pb.firebaseapp.com",
+            databaseURL: "https://olagestor360-pb-default-rtdb.firebaseio.com",
+            projectId: "olagestor360-pb",
+            storageBucket: "olagestor360-pb.appspot.com",
+            messagingSenderId: "234567890123",
+            appId: "1:234567890123:web:abc123def456ghi789"
+        };
+
+        // Inicializar Firebase
+        let database;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            database = firebase.database();
+            console.log('Firebase conectado com sucesso!');
+        } catch (error) {
+            console.error('Erro ao inicializar Firebase:', error);
+            alert('Erro ao conectar ao banco de dados. Usando modo offline temporário.');
+        }
+
+        const municipalities = [
+            "Água Branca", "Aguiar", "Alagoa Grande", "Alagoa Nova", "Alagoinha", "Alcantil", "Algodão de Jandaíra",
+            "Alhandra", "Amparo", "Aparecida", "Araçagi", "Arara", "Araruna", "Areia", "Areia de Baraúnas",
+            "Areial", "Aroeiras", "Assunção", "Baía da Traição", "Bananeiras", "Baraúna", "Barra de Santa Rosa",
+            "Barra de Santana", "Barra de São Miguel", "Bayeux", "Belém", "Belém do Brejo do Cruz",
+            "Bernardino Batista", "Boa Ventura", "Boa Vista", "Bom Jesus", "Bom Sucesso", "Bonito de Santa Fé",
+            "Boqueirão", "Borborema", "Brejo do Cruz", "Brejo dos Santo", "Caaporã", "Cabaceiras", "Cabedelo",
+            "Cachoeira dos Índios", "Cacimba de Areia", "Cacimba de Dentro", "Cacimbas", "Caiçara", "Cajazeiras",
+            "Cajazeirinhas", "Caldas Brandão", "Camalaú", "Campina Grande", "Capim", "Caraúbas", "Carrapateira",
+            "Casserengue", "Catingueira", "Catolé do Rocha", "Caturité", "Conceição", "Condado", "Conde", "Congo",
+            "Coremas", "Coxixola", "Cruz do Espírito Santo", "Cubati", "Cuité", "Cuité de Mamanguape", "Cuitegi",
+            "Curral de Cima", "Curral Velho", "Damião", "Desterro", "Diamante", "Dona Inês", "Duas Estradas",
+            "Emas", "Esperança", "Fagundes", "Frei Martinho", "Gado Bravo", "Guarabira", "Gurinhém", "Gurjão",
+            "Ibiara", "Igaracy", "Imaculada", "Ingá", "Itabaiana", "Itaporanga", "Itapororoca", "Itatuba",
+            "Jacaraú", "Jericó", "João Pessoa", "Joca Claudino", "Juarez Távora", "Juazeirinho", "Junco do Seridó",
+            "Juripiranga", "Juru", "Lagoa", "Lagoa de Dentro", "Lagoa Seca", "Lastro", "Livramento", "Logradouro",
+            "Lucena", "Mãe d'Água", "Malta", "Mamanguape", "Manaíra", "Marcação", "Mari", "Marizópolis",
+            "Massaranduba", "Mataraca", "Matinhas", "Mato Grosso", "Maturéia", "Mogeiro", "Montadas",
+            "Monte Horebe", "Monteiro", "Mulungu", "Natuba", "Nazarezinho", "Nova Floresta", "Nova Olinda",
+            "Nova Palmeira", "Olho d'Água", "Olivedos", "Ouro Velho", "Parari", "Passagem", "Patos", "Paulista",
+            "Pedra Branca", "Pedra Lavrada", "Pedras de Fogo", "Pedro Régis", "Piancó", "Picuí", "Pilar", "Pilões",
+            "Pilõezinhos", "Pirpirituba", "Pitimbu", "Pocinhos", "Poço Dantas", "Poço de José de Moura", "Pombal",
+            "Prata", "Princesa Isabel", "Puxinanã", "Queimadas", "Quixaba", "Remígio", "Riachão",
+            "Riachão do Bacamarte", "Riachão do Poço", "Riacho de Santo Antônio", "Riacho dos Cavalos", "Rio Tinto",
+            "Salgadinho", "Salgado de São Félix", "Santa Cecília", "Santa Cruz", "Santa Helena", "Santa Inês",
+            "Santa Luzia", "Santa Rita", "Santa Teresinha", "Santana de Mangueira", "Santana dos Garrotes",
+            "Santo André", "São Bentinho", "São Bento", "São Domingos", "São Domingos do Cariri", "São Francisco",
+            "São João do Cariri", "São João do Rio do Peixe", "São João do Tigre", "São José da Lagoa Tapada",
+            "São José de Caiana", "São José de Espinharas", "São José de Piranhas", "São José de Princesa",
+            "São José do Bonfim", "São José do Brejo do Cruz", "São José do Sabugi", "São José dos Cordeiros",
+            "São José dos Ramos", "São Mamede", "São Miguel de Taipu", "São Sebastião de Lagoa de Roça",
+            "São Sebastião do Umbuzeiro", "Sapé", "São Vicente do Seridó", "Serra Branca", "Serra da Raiz",
+            "Serra Grande", "Serra Redonda", "Serraria", "Sertãozinho", "Sobrado", "Solânea", "Soledade",
+            "Sossêgo", "Sousa", "Sumé", "Tacima", "Taperoá", "Tavares", "Teixeira", "Tenório", "Triunfo",
+            "Uiraúna", "Umbuzeiro", "Várzea", "Vieirópolis", "Vista Serrana", "Zabelê"
+        ];
+
+        let currentMunicipality = '';
+        let currentUserData = {};
+        let currentLocationType = 'urbana';
+        let currentRating = 0;
+        let currentFeedbackType = '';
+        let currentSecretaria = '';
+        let currentDashboardMunicipality = '';
+        let currentFilter = 'all';
+
+        // Inicializar dados
+        function initializeData() {
+            // Não precisa mais inicializar - Firebase faz isso automaticamente
+            console.log('Firebase inicializado e pronto!');
+        }
+
+        // Função para pegar dados do localStorage
+        function getData(municipality) {
+            try {
+                const localData = JSON.parse(localStorage.getItem('olagestor360_data') || '{}');
+                return localData[municipality] || { evaluations: [] };
+            } catch (error) {
+                console.error('Erro ao obter dados:', error);
+                return { evaluations: [] };
+            }
+        }
+
+        // Função para salvar avaliação (usando localStorage)
+        function saveEvaluation(municipality, evaluation) {
+            try {
+                // Salvar no localStorage
+                const localData = JSON.parse(localStorage.getItem('olagestor360_data') || '{}');
+
+                if (!localData[municipality]) {
+                    localData[municipality] = { evaluations: [] };
+                }
+
+                if (!Array.isArray(localData[municipality].evaluations)) {
+                    localData[municipality].evaluations = [];
+                }
+
+                localData[municipality].evaluations.push(evaluation);
+                localStorage.setItem('olagestor360_data', JSON.stringify(localData));
+
+                console.log('Avaliação salva com sucesso no localStorage!');
+                console.log('Total de avaliações:', localData[municipality].evaluations.length);
+
+                return true;
+            } catch (error) {
+                console.error('Erro ao salvar avaliação:', error);
+                throw error;
+            }
+        }
+
+        // Função para codificar chaves do Firebase (não pode ter . # $ [ ] /)
+        function encodeKey(key) {
+            return key.replace(/[.#$\[\]\/]/g, '_');
+        }
+
+        // Renderizar municípios
+        function renderMunicipalities() {
+            const list = document.getElementById('municipalitiesList');
+            list.innerHTML = '';
+
+            municipalities.forEach(municipality => {
+                const item = document.createElement('div');
+                item.className = 'municipality-item';
+
+                item.innerHTML = `
+                    <div class="municipality-header">
+                        <div class="municipality-name">${municipality}</div>
+                        <div class="municipality-tag">INTERIOR</div>
+                    </div>
+                    <div class="municipality-buttons">
+                        <button class="btn btn-avaliar" onclick="openCitizenModal('${municipality}')">Avaliar Cidade</button>
+                        <button class="btn btn-gabinete" onclick="openGabineteModal('${municipality}')">Gabinete</button>
+                    </div>
+                `;
+
+                list.appendChild(item);
+            });
+        }
+
+        // Filtrar municípios
+        function filterMunicipalities() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const items = document.querySelectorAll('.municipality-item');
+
+            items.forEach(item => {
+                const name = item.querySelector('.municipality-name').textContent.toLowerCase();
+                item.style.display = name.includes(searchTerm) ? 'block' : 'none';
+            });
+        }
+
+        // Modal cidadão
+        function openCitizenModal(municipality) {
+            currentMunicipality = municipality;
+            document.getElementById('citizenModalMunicipality').textContent = municipality + ' te ouve';
+            document.getElementById('citizenModal').classList.add('active');
+
+            // Reset form
+            document.getElementById('inputNome').value = '';
+            document.getElementById('inputCPF').value = '';
+            document.getElementById('inputWhatsApp').value = '';
+            document.getElementById('inputBairro').value = '';
+            setLocationType('urbana');
+        }
+
+        function setLocationType(type) {
+            currentLocationType = type;
+            document.getElementById('toggleUrbana').classList.toggle('active', type === 'urbana');
+            document.getElementById('toggleRural').classList.toggle('active', type === 'rural');
+        }
+
+        function startEvaluation() {
+            const nome = document.getElementById('inputNome').value.trim();
+            const cpf = document.getElementById('inputCPF').value.trim();
+            const whatsapp = document.getElementById('inputWhatsApp').value.trim();
+            const bairro = document.getElementById('inputBairro').value.trim();
+
+            if (!nome || !cpf || !whatsapp || !bairro) {
+                alert('Por favor, preencha todos os campos!');
+                return;
+            }
+
+            currentUserData = { nome, cpf, whatsapp, bairro, locationType: currentLocationType };
+
+            closeModal('citizenModal');
+            openSecretariaModal();
+        }
+
+        // Modal de Secretaria
+        function openSecretariaModal() {
+            currentSecretaria = '';
+            document.getElementById('secretariaModalMunicipality').textContent = currentMunicipality;
+            document.getElementById('secretariaSelectedInfo').style.display = 'none';
+            document.getElementById('secretariaSelectedBadge').textContent = '';
+
+            // Reset seleção visual
+            document.querySelectorAll('.secretaria-btn').forEach(btn => btn.classList.remove('active'));
+
+            document.getElementById('secretariaModal').classList.add('active');
+        }
+
+        function selectSecretaria(secretaria) {
+            currentSecretaria = secretaria;
+
+            // Atualizar visual dos botões
+            document.querySelectorAll('.secretaria-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.trim().includes(secretaria));
+            });
+
+            // Mostrar badge selecionado
+            document.getElementById('secretariaSelectedInfo').style.display = 'block';
+            document.getElementById('secretariaSelectedBadge').textContent = secretaria;
+        }
+
+        function confirmSecretaria() {
+            if (!currentSecretaria) {
+                alert('Por favor, selecione uma área/secretaria!');
+                return;
+            }
+            closeModal('secretariaModal');
+            openEvaluationModal();
+        }
+
+        // Modal de avaliação
+        function openEvaluationModal() {
+            document.getElementById('evaluationModalMunicipality').textContent = currentMunicipality;
+            document.getElementById('evaluationModal').classList.add('active');
+
+            // Mostrar secretaria selecionada no modal de avaliação
+            document.getElementById('secretariaOnEvaluation').textContent = currentSecretaria;
+
+            // Reset
+            currentRating = 0;
+            currentFeedbackType = '';
+            document.getElementById('inputComentario').value = '';
+            document.querySelectorAll('#evaluationModal .toggle-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.rating-btn').forEach(btn => btn.classList.remove('active'));
+
+            // Reset velocímetro
+            updateSpeedometer(0);
+        }
+
+        function setRating(rating) {
+            currentRating = rating;
+
+            // Atualizar botões
+            const buttons = document.querySelectorAll('.rating-btn');
+            buttons.forEach((btn, index) => {
+                btn.classList.toggle('active', index === rating - 1);
+            });
+
+            // Atualizar velocímetro
+            updateSpeedometer(rating);
+        }
+
+        function updateSpeedometer(value) {
+            const needle = document.getElementById('speedometerNeedle');
+            const display = document.getElementById('speedometerValue');
+
+            // Calcular ângulo: -90deg (nota 1) até +90deg (nota 10)
+            // Nota 1 = -90deg, Nota 10 = +90deg
+            const angle = -90 + ((value - 1) / 9) * 180;
+
+            needle.style.transform = `rotate(${angle}deg)`;
+            display.textContent = value;
+        }
+
+        function setFeedbackType(type) {
+            currentFeedbackType = type;
+            document.getElementById('btnReclamacao').classList.toggle('active', type === 'reclamacao');
+            document.getElementById('btnSugestao').classList.toggle('active', type === 'sugestao');
+            document.getElementById('btnSolicitacao').classList.toggle('active', type === 'solicitacao');
+            document.getElementById('btnElogio').classList.toggle('active', type === 'elogio');
+        }
+
+        function submitEvaluation() {
+            if (!currentRating) {
+                alert('Por favor, selecione uma nota!');
+                return;
+            }
+
+            if (!currentFeedbackType) {
+                alert('Por favor, selecione o tipo de feedback!');
+                return;
+            }
+
+            const comentario = document.getElementById('inputComentario').value.trim();
+            if (!comentario) {
+                alert('Por favor, escreva um comentário!');
+                return;
+            }
+
+            const newEvaluation = {
+                ...currentUserData,
+                rating: currentRating,
+                feedbackType: currentFeedbackType,
+                secretaria: currentSecretaria,
+                comentario: comentario,
+                date: new Date().toLocaleString('pt-BR'),
+                timestamp: Date.now()
+            };
+
+            console.log('Salvando avaliação:', newEvaluation);
+            console.log('Município:', currentMunicipality);
+
+            try {
+                // Salvar no localStorage
+                saveEvaluation(currentMunicipality, newEvaluation);
+                alert('Avaliação enviada com sucesso! Obrigado pela sua participação.');
+                closeModal('evaluationModal');
+            } catch (error) {
+                console.error('Erro ao enviar avaliação:', error);
+                alert('Erro ao enviar avaliação. Por favor, tente novamente.');
+            }
+        }
+
+        // Modal Gabinete
+        function openGabineteModal(municipality) {
+            currentDashboardMunicipality = municipality;
+            document.getElementById('gabineteModal').classList.add('active');
+            document.getElementById('inputSenhaGabinete').value = '';
+        }
+
+        function loginGabinete() {
+            const password = document.getElementById('inputSenhaGabinete').value;
+
+            if (password !== 'prefeito123') {
+                alert('Senha incorreta!');
+                return;
+            }
+
+            closeModal('gabineteModal');
+            showDashboard();
+        }
+
+        function showDashboard() {
+            document.getElementById('homeScreen').classList.add('hidden');
+            document.getElementById('gabineteDashboard').classList.remove('hidden');
+            document.getElementById('dashboardMunicipality').textContent = currentDashboardMunicipality;
+
+            loadDashboardData();
+        }
+
+        function loadDashboardData() {
+            const data = getData(currentDashboardMunicipality);
+
+            // Pegar array de avaliações
+            let evaluations = [];
+            if (data.evaluations && Array.isArray(data.evaluations)) {
+                evaluations = data.evaluations;
+            }
+
+            const reclamacoes = evaluations.filter(e => e.feedbackType === 'reclamacao').length;
+            const sugestoes = evaluations.filter(e => e.feedbackType === 'sugestao').length;
+            const solicitacoes = evaluations.filter(e => e.feedbackType === 'solicitacao').length;
+            const elogios = evaluations.filter(e => e.feedbackType === 'elogio').length;
+
+            document.getElementById('totalAvaliacoes').textContent = evaluations.length;
+            document.getElementById('totalReclamacoes').textContent = reclamacoes;
+            document.getElementById('totalSugestoes').textContent = sugestoes;
+            document.getElementById('totalSolicitacoes').textContent = solicitacoes;
+            document.getElementById('totalElogios').textContent = elogios;
+
+            // Calcular média das avaliações
+            if (evaluations.length > 0) {
+                const somaNotas = evaluations.reduce((acc, e) => acc + e.rating, 0);
+                const media = somaNotas / evaluations.length;
+                updateDashboardSpeedometer(media);
+
+                // Atualizar texto descritivo
+                const mediaText = document.getElementById('dashboardMediaText');
+                if (media >= 8) {
+                    mediaText.textContent = '🎉 Excelente avaliação!';
+                    mediaText.style.color = '#44FF44';
+                } else if (media >= 6) {
+                    mediaText.textContent = '👍 Boa avaliação';
+                    mediaText.style.color = '#BBFF44';
+                } else if (media >= 4) {
+                    mediaText.textContent = '⚠️ Avaliação Regular';
+                    mediaText.style.color = '#FFBB44';
+                } else {
+                    mediaText.textContent = '🚨 Atenção Necessária';
+                    mediaText.style.color = '#FF4444';
+                }
+            } else {
+                updateDashboardSpeedometer(0);
+                document.getElementById('dashboardMediaText').textContent = 'Aguardando avaliações';
+            }
+
+            renderFeedbackList('all');
+            renderSecretariasPerformance(evaluations);
+        }
+
+        function renderSecretariasPerformance(evaluations) {
+            console.log('=== RENDER SECRETARIAS PERFORMANCE ===');
+            const container = document.getElementById('secretariasPerformance');
+
+            const secretariasList = [
+                { nome: 'Saúde', emoji: '🏥' },
+                { nome: 'Educação', emoji: '📚' },
+                { nome: 'Infraestrutura', emoji: '🏗️' },
+                { nome: 'Assistência Social', emoji: '🤝' },
+                { nome: 'Segurança Pública', emoji: '🛡️' },
+                { nome: 'Meio Ambiente', emoji: '🌿' },
+                { nome: 'Transporte', emoji: '🚌' },
+                { nome: 'Finanças', emoji: '💰' },
+                { nome: 'Agricultura', emoji: '🌾' },
+                { nome: 'Cultura e Turismo', emoji: '🎭' },
+                { nome: 'Esporte e Lazer', emoji: '⚽' },
+                { nome: 'Administração Geral', emoji: '🏛️' }
+            ];
+
+            container.innerHTML = '';
+
+            secretariasList.forEach(secretaria => {
+                const avaliacoesSecretaria = evaluations.filter(e => e.secretaria === secretaria.nome);
+                const totalAvaliacoes = avaliacoesSecretaria.length;
+
+                if (totalAvaliacoes === 0) return; // Não mostra secretarias sem avaliações
+
+                const somaNotas = avaliacoesSecretaria.reduce((acc, e) => acc + e.rating, 0);
+                const media = somaNotas / totalAvaliacoes;
+
+                const reclamacoes = avaliacoesSecretaria.filter(e => e.feedbackType === 'reclamacao').length;
+                const elogios = avaliacoesSecretaria.filter(e => e.feedbackType === 'elogio').length;
+
+                const card = document.createElement('div');
+                card.className = 'secretaria-performance-card';
+
+                const barPercentage = (media / 10) * 100;
+
+                card.innerHTML = `
+                    <div class="secretaria-performance-header">
+                        <div class="secretaria-performance-name">
+                            <span style="font-size: 24px;">${secretaria.emoji}</span>
+                            <span>${secretaria.nome}</span>
+                        </div>
+                        <div class="secretaria-performance-badge">${media.toFixed(1)}</div>
+                    </div>
+                    <div class="secretaria-performance-bar">
+                        <div class="secretaria-performance-bar-fill" style="width: ${barPercentage}%"></div>
+                    </div>
+                    <div class="secretaria-performance-stats">
+                        <div class="secretaria-performance-stat">
+                            <div class="secretaria-performance-stat-value">${totalAvaliacoes}</div>
+                            <div class="secretaria-performance-stat-label">Avaliações</div>
+                        </div>
+                        <div class="secretaria-performance-stat">
+                            <div class="secretaria-performance-stat-value" style="color: #22c55e;">${elogios}</div>
+                            <div class="secretaria-performance-stat-label">Elogios</div>
+                        </div>
+                        <div class="secretaria-performance-stat">
+                            <div class="secretaria-performance-stat-value" style="color: #ef4444;">${reclamacoes}</div>
+                            <div class="secretaria-performance-stat-label">Reclamações</div>
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+
+            console.log('=== FIM RENDER SECRETARIAS PERFORMANCE ===');
+        }
+
+        function updateDashboardSpeedometer(value) {
+            console.log('=== UPDATE DASHBOARD SPEEDOMETER ===');
+            console.log('Valor recebido:', value);
+
+            const needle = document.getElementById('dashboardNeedle');
+            const display = document.getElementById('dashboardValue');
+
+            console.log('Needle elemento:', needle);
+            console.log('Display elemento:', display);
+
+            if (!needle || !display) {
+                console.error('ERRO: Elementos não encontrados!');
+                console.error('dashboardNeedle:', needle);
+                console.error('dashboardValue:', display);
+                return;
+            }
+
+            // Calcular ângulo: -90deg (nota 1) até +90deg (nota 10)
+            const angle = value > 0 ? -90 + ((value - 1) / 9) * 180 : -90;
+
+            console.log('Ângulo calculado:', angle);
+
+            needle.style.transform = `rotate(${angle}deg)`;
+            display.textContent = value > 0 ? value.toFixed(1) : '0.0';
+
+            console.log('Velocímetro atualizado!');
+        }
+
+        function filterDashboardFeedback(type) {
+            currentFilter = type;
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            renderFeedbackList(type);
+        }
+
+        function renderFeedbackList(filter) {
+            console.log('=== RENDER FEEDBACK LIST ===');
+            console.log('Filtro:', filter);
+            console.log('Município atual:', currentDashboardMunicipality);
+
+            const data = getData(currentDashboardMunicipality);
+            console.log('Todos os dados:', data);
+
+            // Pegar array de avaliações
+            let evaluations = [];
+            if (data.evaluations && Array.isArray(data.evaluations)) {
+                evaluations = data.evaluations;
+            }
+            console.log('Avaliações do município:', evaluations);
+
+            if (filter !== 'all') {
+                evaluations = evaluations.filter(e => e.feedbackType === filter);
+                console.log('Avaliações filtradas:', evaluations);
+            }
+
+            const feedbackList = document.getElementById('feedbackList');
+            console.log('Feed list element:', feedbackList);
+
+            if (evaluations.length === 0) {
+                console.log('Nenhuma avaliação encontrada');
+                feedbackList.innerHTML = '<p style="text-align: center; color: #999; padding: 40px;">Nenhum feedback encontrado.</p>';
+                return;
+            }
+
+            feedbackList.innerHTML = '';
+
+            const typeLabels = {
+                'reclamacao': 'RECLAMAÇÃO',
+                'sugestao': 'SUGESTÃO',
+                'solicitacao': 'SOLICITAÇÃO',
+                'elogio': 'ELOGIO'
+            };
+
+            const borderColors = {
+                'reclamacao': '#ef4444',
+                'sugestao': '#f59e0b',
+                'solicitacao': '#5B5FED',
+                'elogio': '#22c55e'
+            };
+
+            // Ordenar por timestamp (mais recente primeiro)
+            evaluations.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+            evaluations.forEach((evaluation, index) => {
+                console.log(`Renderizando avaliação ${index + 1}:`, evaluation);
+
+                const item = document.createElement('div');
+                item.className = 'feedback-item';
+                const borderColor = borderColors[evaluation.feedbackType] || '#5B5FED';
+                item.style.borderLeftColor = borderColor;
+
+                const whatsappClean = (evaluation.whatsapp || evaluation.whatsApp || '').replace(/\D/g, '');
+                const secretariaLabel = evaluation.secretaria ? `<span class="secretaria-badge">${evaluation.secretaria}</span>` : '';
+
+                item.innerHTML = `
+                    <div class="feedback-header">
+                        <div>
+                            <span class="feedback-type-badge ${evaluation.feedbackType}">${typeLabels[evaluation.feedbackType]}</span>
+                            ${secretariaLabel}
+                        </div>
+                        <span class="feedback-date">${evaluation.date}</span>
+                    </div>
+                    <div class="feedback-content">
+                        <strong>Nota:</strong> ${evaluation.rating}/10<br>
+                        ${evaluation.comentario}
+                    </div>
+                    <div class="feedback-user">
+                        <strong>${evaluation.nome}</strong> - ${evaluation.bairro} (${evaluation.locationType.toUpperCase()})<br>
+                        WhatsApp: ${evaluation.whatsapp || evaluation.whatsApp}<br>
+                        <button class="whatsapp-btn" onclick="respondWhatsApp('${whatsappClean}', '${evaluation.nome}')">
+                            <span>📱</span> Responder via WhatsApp
+                        </button>
+                    </div>
+                `;
+
+                feedbackList.appendChild(item);
+                console.log('Item adicionado ao feedbackList');
+            });
+
+            console.log('=== FIM RENDER FEEDBACK LIST ===');
+        }
+
+        function backToHome() {
+            document.getElementById('gabineteDashboard').classList.add('hidden');
+            document.getElementById('homeScreen').classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Função para responder via WhatsApp
+        function respondWhatsApp(phone, nome) {
+            // Remove todos os caracteres não numéricos
+            const cleanPhone = phone.replace(/\D/g, '');
+
+            // Monta a mensagem padrão
+            const message = `Olá ${nome}, aqui é o Gabinete do Prefeito de ${currentDashboardMunicipality}. Recebemos seu feedback e gostaríamos de dar uma resposta.`;
+
+            // Codifica a mensagem para URL
+            const encodedMessage = encodeURIComponent(message);
+
+            // Abre o WhatsApp Web/App com a mensagem pré-preenchida
+            const whatsappURL = `https://wa.me/55${cleanPhone}?text=${encodedMessage}`;
+
+            // Abre em nova janela
+            window.open(whatsappURL, '_blank');
+        }
+
+        // Inicializar ao carregar
+        window.onload = function() {
+            initializeData();
+            renderMunicipalities();
+        };
+    </script>
+</body>
+</html>
