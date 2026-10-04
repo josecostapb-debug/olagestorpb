@@ -1,0 +1,24 @@
+# Dependências
+node_modules/
+
+# Build
+dist/
+frontend/dist/
+frontend/node_modules/
+
+# Ambiente
+.env
+.env.*
+!.env.example
+
+# Prisma
+prisma/*.db
+
+# Logs / SO
+*.log
+*.tsbuildinfo
+.DS_Store
+
+# VS Code / IDE
+.vscode/
+.idea/

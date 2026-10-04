@@ -1,0 +1,127 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  GESTOR_MUNICIPIO
+}
+
+enum FeedbackType {
+  RECLAMACAO
+  SUGESTAO
+  SOLICITACAO
+  ELOGIO
+}
+
+enum LocationType {
+  URBANA
+  RURAL
+}
+
+enum EvaluationScope {
+  MUNICIPIO
+  ESTADO
+}
+
+model User {
+  id             String       @id @default(cuid())
+  name           String
+  email          String       @unique
+  passwordHash   String
+  role           UserRole     @default(GESTOR_MUNICIPIO)
+  stateId        String?
+  state          State?       @relation(fields: [stateId], references: [id], onDelete: SetNull)
+  municipalityId String?
+  municipality   Municipality? @relation(fields: [municipalityId], references: [id], onDelete: SetNull)
+  active         Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([role])
+  @@index([municipalityId])
+  @@map("users")
+}
+
+model State {
+  id            String         @id @default(cuid())
+  code          String         @unique
+  name          String
+  slug          String         @unique
+  active        Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  municipalities Municipality[]
+  secretaries   Secretary[]
+  users         User[]
+  evaluations   Evaluation[]
+
+  @@index([active])
+  @@map("states")
+}
+
+model Municipality {
+  id          String       @id @default(cuid())
+  name        String
+  slug        String
+  stateId     String
+  state       State        @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  active      Boolean      @default(true)
+  sortOrder   Int          @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  evaluations Evaluation[]
+  users       User[]
+
+  @@unique([stateId, slug])
+  @@index([stateId, active])
+  @@map("municipalities")
+}
+
+model Secretary {
+  id          String       @id @default(cuid())
+  name        String
+  emoji       String?
+  order       Int          @default(0)
+  stateId     String
+  state       State        @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  active      Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  evaluations Evaluation[]
+
+  @@unique([stateId, name])
+  @@index([stateId, active])
+  @@map("secretaries")
+}
+
+model Evaluation {
+  id              String          @id @default(cuid())
+  scope           EvaluationScope @default(MUNICIPIO)
+  stateId         String
+  state           State           @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  municipalityId  String?
+  municipality    Municipality?   @relation(fields: [municipalityId], references: [id], onDelete: SetNull)
+  secretaryId     String?
+  secretary       Secretary?      @relation(fields: [secretaryId], references: [id], onDelete: SetNull)
+  citizenName     String
+  citizenCpfHash  String?
+  citizenWhatsapp String
+  bairro          String
+  locationType    LocationType    @default(URBANA)
+  rating          Int
+  feedbackType    FeedbackType
+  comment         String          @db.Text
+  createdAt       DateTime        @default(now())
+
+  @@index([stateId, municipalityId, createdAt])
+  @@index([municipalityId, createdAt])
+  @@index([secretaryId])
+  @@index([feedbackType])
+  @@map("evaluations")
+}
